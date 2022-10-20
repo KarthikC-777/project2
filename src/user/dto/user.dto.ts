@@ -1,12 +1,12 @@
 export class UserDto {
-  readonly empId: string;
+  readonly userId: string;
   readonly name: string;
   readonly email: string;
   readonly password: string;
   readonly phonenumber: number;
   readonly salary: number;
-  readonly role: string;
-  readonly accessRole: string;
+  readonly role: string[];
+  readonly designation: string;
   readonly status: string;
   readonly address: string;
   readonly availableLeaves: number;

@@ -27,34 +27,36 @@ export class UserService {
   }
   async loginUser(userDto: UserDto, res): Promise<string> {
     // console.log(userDto.email);
-    const checkEmployee = await this.userModel.findOne({
+    const checkUser = await this.userModel.findOne({
       email: userDto.email,
     });
 
-    if (!checkEmployee) {
+    if (!checkUser) {
       throw new HttpException('Incorrect Email', 404);
     }
 
     const passwordCheck = await bcrypt.compare(
       userDto.password,
-      checkEmployee.password,
+      checkUser.password,
     );
     if (!passwordCheck) {
       throw new HttpException('Incorrect Password', 401);
     }
     const token = this.generateJwt(
-      checkEmployee.userId,
-      checkEmployee.name,
-      checkEmployee.email,
+      checkUser.userId,
+      checkUser.name,
+      checkUser.email,
+      checkUser.role,
     );
     res.cookie('userlogoutcookie', token);
     return token;
   }
-  generateJwt(userId: string, name: string, email: string) {
+  generateJwt(userId: string, name: string, email: string, role: string[]) {
     return this.jwtService.sign({
       userId: userId,
       Name: name,
       Email: email,
+      role: role,
     });
   }
 
@@ -65,7 +67,7 @@ export class UserService {
   async getemployee(req) {
     try {
       const ver = await this.jwtService.verify(req.cookies.userlogoutcookie);
-      console.log(ver);
+
       if (!ver) {
         throw new HttpException('Unauthorized admin User error ', 401);
       }
@@ -74,13 +76,5 @@ export class UserService {
       console.log(error.message);
       throw new HttpException('Login again ,Admin user Not found', 404);
     }
-  }
-
-  public async findRole() {
-    // const ver = await this.jwtService.verify(req.cookies.userlogoutcookie);
-    // if (!ver) {
-    //   throw new HttpException('Unauthorized admin User error ', 401);
-    // }
-    // return this.userModel.findOne({ email: ver.Email }).exec();
   }
 }

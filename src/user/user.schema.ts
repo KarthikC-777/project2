@@ -2,9 +2,14 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 export type userDocument = user & Document;
+export enum UserRole {
+  User = 'user',
+  Admin = 'admin',
+}
+
 @Schema()
 export class user {
-  @Prop({ required: true })
+  @Prop({})
   userId: string;
 
   @Prop({ required: true })
@@ -22,14 +27,14 @@ export class user {
   @Prop({})
   address: string;
 
-  @Prop({ required: true })
+  @Prop({})
   salary: number;
 
-  @Prop({ required: true })
-  role: string;
+  @Prop({ default: UserRole.User })
+  role: string[];
 
-  @Prop({ default: 'user' })
-  accessRole: string;
+  @Prop({})
+  designation: string;
 
   @Prop({ default: 'active' })
   status: string;

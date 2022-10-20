@@ -4,40 +4,42 @@ import {
   ExecutionContext,
   Req,
   Body,
+  HttpException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { UserDto } from './dto/user.dto';
 
-import { Role } from './entities/role.enum';
 import { ROLES_KEY } from './entities/roles.decorator';
-import { User } from './entities/user.entity';
+
 import { UserService } from './user.service';
+import * as request from 'supertest';
+import { JwtService } from '@nestjs/jwt';
+import { user } from './user.schema';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private reflector: Reflector, private jwtService: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
     if (!requiredRoles) {
       return true;
     }
-    // const { user } = context.switchToHttp().getRequest();
-    // return requiredRoles.some((role) => user.roles?.includes(role));
+    try {
+      const request = context.switchToHttp().getRequest();
 
-    // const user: User = {
-    //   name: 'Karthik',
-    //   roles: [Role.Admin],
-    // };
+      const ver = this.jwtService.verify(request.cookies.userlogoutcookie);
+      if (!ver) {
+        throw new HttpException('Unauthorized admin User error ', 401);
+      }
 
-    const user = this.userService.findRole();
-    // return requiredRoles.some((role) => user.accessRole.includes(role));
+      return requiredRoles.some((role) => ver.role?.includes(role));
+    } catch (error) {
+      throw new HttpException(error.message, 404);
+    }
   }
 }
